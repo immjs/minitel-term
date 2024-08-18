@@ -1,13 +1,14 @@
-import { jsx as _jsx } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import XTerm from '@xterm/headless';
 import { useEffect, useRef, useState } from 'react';
 import defaultShell from 'default-shell';
-import nodePty from 'node-pty';
+import nodePty from 'node-pty-prebuilt-multiarch';
 import { useKeyboard } from 'minitel-react';
 export function App() {
     const xtermRef = useRef();
     const ptyRef = useRef();
     const [bufferChars, setBufferChars] = useState([]);
+    const [cursorPosition, setCursorPosition] = useState([0, 21]);
     function updateBufferChars() {
         const xtermCur = xtermRef.current;
         if (!xtermCur)
@@ -24,6 +25,7 @@ export function App() {
             }
             return lineChars;
         }));
+        setCursorPosition([xtermCur.buffer.active.cursorY, xtermCur.buffer.active.cursorX]);
     }
     useEffect(() => {
         const xterm = new XTerm.Terminal({
@@ -39,7 +41,7 @@ export function App() {
             cols: 40,
             rows: 24,
             cwd: process.env.HOME,
-            env: process.env
+            env: Object.assign({}, process.env),
         });
         ptyRef.current.onData((v) => {
             xterm.write(v, updateBufferChars);
@@ -56,11 +58,10 @@ export function App() {
             ptyCur.write(translation[v] || v);
         }
     });
-    // console.log({
-    //   a: bufferChars.map((v) => v.map((v_) => {
-    //     console.log(v_.getChars() || '\x09');
-    //     return v_.getChars();
-    //   }).join('')).join('\n'),
-    // });
-    return (_jsx("para", { children: bufferChars.map((v) => v.map((v_) => v_.getChars() || ' ').join('')).join('\n') }));
+    // bufferChars.map((v) => v.map((v_) => {
+    //   // console.log(JSON.stringify(v_.getChars()));
+    //   return v_.getChars();
+    // }).join('')).join('\n');
+    // console.log(cursorPosition);
+    return (_jsxs("zjoin", { children: [_jsx("para", { children: bufferChars.map((v) => v.map((v_) => v_.getChars() || '\x09').join('')).join('\n') }), _jsx("xjoin", { fillChar: '\x09', pad: [cursorPosition[0], 0, 0, cursorPosition[1]], children: _jsx("input", { width: 1, autofocus: true, visible: false }) })] }));
 }

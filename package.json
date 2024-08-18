@@ -27,7 +27,7 @@
     "@xterm/headless": "^5.5.0",
     "default-shell": "^2.2.0",
     "minitel-react": "^4.1.2",
-    "node-pty": "^1.0.0",
+    "node-pty-prebuilt-multiarch": "^0.10.1-pre.5",
     "react": "^18.3.1",
     "ws": "^8.18.0",
     "ws-duplex-bridge": "^1.0.1"

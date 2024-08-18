@@ -1,13 +1,14 @@
 import XTerm, { IBufferCell, IBufferLine, Terminal } from '@xterm/headless';
 import { useEffect, useRef, useState } from 'react';
 import defaultShell from 'default-shell';
-import nodePty, { IPty } from 'node-pty';
+import nodePty, { IPty } from 'node-pty-prebuilt-multiarch';
 import { useKeyboard } from 'minitel-react';
 
 export function App() {
   const xtermRef = useRef<Terminal>();
   const ptyRef = useRef<IPty>();
   const [bufferChars, setBufferChars] = useState<IBufferCell[][]>([]);
+  const [cursorPosition, setCursorPosition] = useState<[number, number]>([0, 21]);
 
   function updateBufferChars() {
     const xtermCur = xtermRef.current;
@@ -29,6 +30,8 @@ export function App() {
         return lineChars;
       }),
     );
+
+    setCursorPosition([xtermCur.buffer.active.cursorY, xtermCur.buffer.active.cursorX]);
   }
 
   useEffect(() => {
@@ -46,7 +49,7 @@ export function App() {
       cols: 40,
       rows: 24,
       cwd: process.env.HOME,
-      env: process.env
+      env: { ...process.env } as { [k: string]: string },
     });
     ptyRef.current.onData((v) => {
       xterm.write(v, updateBufferChars);
@@ -66,16 +69,20 @@ export function App() {
     }
   })
 
-  // console.log({
-  //   a: bufferChars.map((v) => v.map((v_) => {
-  //     console.log(v_.getChars() || '\x09');
-  //     return v_.getChars();
-  //   }).join('')).join('\n'),
-  // });
+  // bufferChars.map((v) => v.map((v_) => {
+  //   // console.log(JSON.stringify(v_.getChars()));
+  //   return v_.getChars();
+  // }).join('')).join('\n');
+  // console.log(cursorPosition);
 
   return (
-    <para>
-      {bufferChars.map((v) => v.map((v_) => v_.getChars() || ' ').join('')).join('\n')}
-    </para>
+    <zjoin>
+      <para>
+        {bufferChars.map((v) => v.map((v_) => v_.getChars() || '\x09').join('')).join('\n')}
+      </para>
+      <xjoin fillChar={'\x09'} pad={[cursorPosition[0], 0, 0, cursorPosition[1]]}>
+        <input width={1} autofocus visible={false} />
+      </xjoin>
+    </zjoin>
   );
 }
