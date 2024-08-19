@@ -20,7 +20,7 @@ export function App() {
         }
         setBufferChars(bufferLines.map((v) => {
             const lineChars = [];
-            for (let i = 0; i < v.length; i += 1) {
+            for (let i = 0; i < Math.min(40, v.length); i += 1) {
                 lineChars.push(v.getCell(i));
             }
             return lineChars;
