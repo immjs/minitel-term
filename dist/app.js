@@ -64,9 +64,14 @@ export function Term({ user }) {
             ptyCur.write(translation[v] || v);
         }
     });
-    return (_jsxs("zjoin", { children: [_jsx("para", { children: bufferChars.map((v) => v.map((v_) => v_.getChars().length <= 1 && v_.getChars().charCodeAt(0) < 128
-                    ? v_.getChars() || '\x09'
-                    : '\x7f').join('')).join('\n') }), _jsx("xjoin", { fillChar: '\x09', pad: [cursorPosition[0], 0, 0, cursorPosition[1]], children: _jsx("input", { width: 1, autofocus: true, visible: false }) })] }));
+    return (_jsxs("zjoin", { children: [_jsx("para", { children: bufferChars.map((v) => v.map((v_) => {
+                    const chars = v_.getChars();
+                    if (chars.length < 1)
+                        return '\x09';
+                    if (chars.length > 1 || chars.charCodeAt(0) < 128)
+                        return '\x7f';
+                    return chars;
+                }).join('')).join('\n') }), _jsx("xjoin", { fillChar: '\x09', pad: [cursorPosition[0], 0, 0, cursorPosition[1]], children: _jsx("input", { width: 1, autofocus: true, visible: false }) })] }));
 }
 export function App() {
     const [user, setUser] = useState('');
