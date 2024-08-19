@@ -78,11 +78,16 @@ export function Term({ user }: { user: string }) {
   return (
     <zjoin>
       <para>
-        {bufferChars.map((v) => v.map((v_) =>
-          v_.getChars().length <= 1 && v_.getChars().charCodeAt(0) < 128
-            ? v_.getChars() || '\x09'
-            : '\x7f'
-        ).join('')).join('\n')}
+        {
+          bufferChars.map((v) =>
+            v.map((v_) => {
+              const chars = v_.getChars();
+              if (chars.length < 1) return '\x09';
+              if (chars.length > 1 || chars.charCodeAt(0) < 128) return '\x7f';
+              return chars;
+            }).join('')
+          ).join('\n')
+        }
       </para>
       <xjoin fillChar={'\x09'} pad={[cursorPosition[0], 0, 0, cursorPosition[1]]}>
         <input width={1} autofocus visible={false} />
