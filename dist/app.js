@@ -1,10 +1,11 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import XTerm from '@xterm/headless';
-import { useEffect, useRef, useState } from 'react';
-import defaultShell from 'default-shell';
+import { useContext, useEffect, useRef, useState } from 'react';
 import nodePty from 'node-pty';
-import { useKeyboard } from 'minitel-react';
-export function App() {
+import { minitelContext, useKeyboard } from 'minitel-react';
+import { hostname } from 'os';
+export function Term({ user }) {
+    const minitel = useContext(minitelContext);
     const xtermRef = useRef();
     const ptyRef = useRef();
     const [bufferChars, setBufferChars] = useState([]);
@@ -36,7 +37,7 @@ export function App() {
             scrollback: 24,
         });
         xtermRef.current = xterm;
-        const pty = nodePty.spawn(defaultShell, [], {
+        const pty = nodePty.spawn('su', [user], {
             name: 'xterm-mono',
             cols: 40,
             rows: 24,
@@ -47,6 +48,7 @@ export function App() {
         pty.onData((v) => {
             xterm.write(v, updateBufferChars);
         });
+        pty.onExit(() => minitel.stream.end());
         return () => {
             xterm.dispose();
             pty.kill();
@@ -57,9 +59,22 @@ export function App() {
         if (ptyCur) {
             const translation = {
                 '\u0013G': '\x08',
+                '\u0013A': '\n',
             };
             ptyCur.write(translation[v] || v);
         }
     });
     return (_jsxs("zjoin", { children: [_jsx("para", { children: bufferChars.map((v) => v.map((v_) => v_.getChars() || '\x09').join('')).join('\n') }), _jsx("xjoin", { fillChar: '\x09', pad: [cursorPosition[0], 0, 0, cursorPosition[1]], children: _jsx("input", { width: 1, autofocus: true, visible: false }) })] }));
+}
+export function App() {
+    const [user, setUser] = useState('');
+    const [step, setStep] = useState(0);
+    useKeyboard((v) => {
+        if (v === '\u0013A') {
+            setStep(1);
+        }
+    });
+    if (step === 1)
+        return _jsx(Term, { user: user });
+    return (_jsxs("yjoin", { widthAlign: 'middle', heightAlign: 'middle', gap: 1, children: [_jsxs("para", { children: ["Connecting to ", hostname()] }), _jsxs("xjoin", { gap: 1, children: [_jsx("para", { children: "Username:" }), _jsx("input", { autofocus: true, onChange: setUser })] }), _jsxs("para", { doubleHeight: true, children: [_jsx("span", { invert: true, children: " Envoi " }), " Se connecter"] })] }));
 }

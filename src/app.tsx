@@ -1,10 +1,11 @@
 import XTerm, { IBufferCell, IBufferLine, Terminal } from '@xterm/headless';
-import { useEffect, useRef, useState } from 'react';
-import defaultShell from 'default-shell';
+import { useContext, useEffect, useRef, useState } from 'react';
 import nodePty, { IPty } from 'node-pty';
-import { useKeyboard } from 'minitel-react';
+import { minitelContext, useKeyboard } from 'minitel-react';
+import { hostname } from 'os';
 
-export function App() {
+export function Term({ user }: { user: string }) {
+  const minitel = useContext(minitelContext);
   const xtermRef = useRef<Terminal>();
   const ptyRef = useRef<IPty>();
   const [bufferChars, setBufferChars] = useState<IBufferCell[][]>([]);
@@ -44,7 +45,7 @@ export function App() {
     });
     xtermRef.current = xterm;
 
-    const pty = nodePty.spawn(defaultShell, [], {
+    const pty = nodePty.spawn('su', [user], {
       name: 'xterm-mono',
       cols: 40,
       rows: 24,
@@ -52,9 +53,10 @@ export function App() {
       env: { ...process.env } as { [k: string]: string },
     });
     ptyRef.current = pty;
-    pty.onData((v) => {
+    pty.onData((v: string) => {
       xterm.write(v, updateBufferChars);
     });
+    pty.onExit(() => minitel.stream.end());
 
     return () => {
       xterm.dispose();
@@ -67,6 +69,7 @@ export function App() {
     if (ptyCur) {
       const translation: Record<string, string> = {
         '\u0013G': '\x08',
+        '\u0013A': '\n',
       };
       ptyCur.write(translation[v] || v);
     }
@@ -81,5 +84,34 @@ export function App() {
         <input width={1} autofocus visible={false} />
       </xjoin>
     </zjoin>
+  );
+}
+
+export function App() {
+  const [user, setUser] = useState('');
+  const [step, setStep] = useState(0);
+
+  useKeyboard((v) => {
+    if (v === '\u0013A') {
+      setStep(1);
+    }
+  });
+
+  if (step === 1) return <Term user={user} />;
+  return (
+    <yjoin widthAlign='middle' heightAlign='middle' gap={1}>
+      <para>
+        Connecting to { hostname() }
+      </para>
+      <xjoin gap={1}>
+        <para>
+          Username:
+        </para>
+        <input autofocus onChange={setUser} />
+      </xjoin>
+      <para doubleHeight>
+        <span invert> Envoi </span> Se connecter
+      </para>
+    </yjoin>
   );
 }
