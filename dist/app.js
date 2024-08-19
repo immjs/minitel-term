@@ -2,7 +2,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import XTerm from '@xterm/headless';
 import { useEffect, useRef, useState } from 'react';
 import defaultShell from 'default-shell';
-import nodePty from 'node-pty-prebuilt-multiarch';
+import nodePty from 'node-pty';
 import { useKeyboard } from 'minitel-react';
 export function App() {
     const xtermRef = useRef();
@@ -36,17 +36,21 @@ export function App() {
             scrollback: 24,
         });
         xtermRef.current = xterm;
-        ptyRef.current = nodePty.spawn(defaultShell, [], {
+        const pty = nodePty.spawn(defaultShell, [], {
             name: 'xterm-mono',
             cols: 40,
             rows: 24,
             cwd: process.env.HOME,
             env: Object.assign({}, process.env),
         });
-        ptyRef.current.onData((v) => {
+        ptyRef.current = pty;
+        pty.onData((v) => {
             xterm.write(v, updateBufferChars);
         });
-        return () => xterm.dispose();
+        return () => {
+            xterm.dispose();
+            pty.kill();
+        };
     }, []);
     useKeyboard((v) => {
         const ptyCur = ptyRef.current;
@@ -54,14 +58,8 @@ export function App() {
             const translation = {
                 '\u0013G': '\x08',
             };
-            console.log(v);
             ptyCur.write(translation[v] || v);
         }
     });
-    // bufferChars.map((v) => v.map((v_) => {
-    //   // console.log(JSON.stringify(v_.getChars()));
-    //   return v_.getChars();
-    // }).join('')).join('\n');
-    // console.log(cursorPosition);
     return (_jsxs("zjoin", { children: [_jsx("para", { children: bufferChars.map((v) => v.map((v_) => v_.getChars() || '\x09').join('')).join('\n') }), _jsx("xjoin", { fillChar: '\x09', pad: [cursorPosition[0], 0, 0, cursorPosition[1]], children: _jsx("input", { width: 1, autofocus: true, visible: false }) })] }));
 }

@@ -1,7 +1,7 @@
 import XTerm, { IBufferCell, IBufferLine, Terminal } from '@xterm/headless';
 import { useEffect, useRef, useState } from 'react';
 import defaultShell from 'default-shell';
-import nodePty, { IPty } from 'node-pty-prebuilt-multiarch';
+import nodePty, { IPty } from 'node-pty';
 import { useKeyboard } from 'minitel-react';
 
 export function App() {
@@ -44,18 +44,22 @@ export function App() {
     });
     xtermRef.current = xterm;
 
-    ptyRef.current = nodePty.spawn(defaultShell, [], {
+    const pty = nodePty.spawn(defaultShell, [], {
       name: 'xterm-mono',
       cols: 40,
       rows: 24,
       cwd: process.env.HOME,
       env: { ...process.env } as { [k: string]: string },
     });
-    ptyRef.current.onData((v) => {
+    ptyRef.current = pty;
+    pty.onData((v) => {
       xterm.write(v, updateBufferChars);
     });
 
-    return () => xterm.dispose();
+    return () => {
+      xterm.dispose();
+      pty.kill();
+    };
   }, []);
 
   useKeyboard((v) => {
@@ -64,16 +68,9 @@ export function App() {
       const translation: Record<string, string> = {
         '\u0013G': '\x08',
       };
-      console.log(v);
       ptyCur.write(translation[v] || v);
     }
-  })
-
-  // bufferChars.map((v) => v.map((v_) => {
-  //   // console.log(JSON.stringify(v_.getChars()));
-  //   return v_.getChars();
-  // }).join('')).join('\n');
-  // console.log(cursorPosition);
+  });
 
   return (
     <zjoin>
