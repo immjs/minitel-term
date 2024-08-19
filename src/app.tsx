@@ -79,7 +79,7 @@ export function Term({ user }: { user: string }) {
     <zjoin>
       <para>
         {bufferChars.map((v) => v.map((v_) =>
-          v_.getChars().length <= 1
+          v_.getChars().length <= 1 && v_.getChars().charCodeAt(0) < 128
             ? v_.getChars() || '\x09'
             : '\x7f'
         ).join('')).join('\n')}
