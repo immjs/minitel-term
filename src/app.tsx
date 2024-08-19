@@ -83,7 +83,7 @@ export function Term({ user }: { user: string }) {
             v.map((v_) => {
               const chars = v_.getChars();
               if (chars.length < 1) return '\x09';
-              if (chars.length > 1 || chars.charCodeAt(0) < 128) return '\x7f';
+              if (chars.length > 1 || chars.charCodeAt(0) >= 128) return '\x7f';
               return chars;
             }).join('')
           ).join('\n')

@@ -68,7 +68,7 @@ export function Term({ user }) {
                     const chars = v_.getChars();
                     if (chars.length < 1)
                         return '\x09';
-                    if (chars.length > 1 || chars.charCodeAt(0) < 128)
+                    if (chars.length > 1 || chars.charCodeAt(0) >= 128)
                         return '\x7f';
                     return chars;
                 }).join('')).join('\n') }), _jsx("xjoin", { fillChar: '\x09', pad: [cursorPosition[0], 0, 0, cursorPosition[1]], children: _jsx("input", { width: 1, autofocus: true, visible: false }) })] }));
