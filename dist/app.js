@@ -64,7 +64,7 @@ export function Term({ user }) {
             ptyCur.write(translation[v] || v);
         }
     });
-    return (_jsxs("zjoin", { children: [_jsx("para", { children: bufferChars.map((v) => v.map((v_) => v_.getChars().length <= 1
+    return (_jsxs("zjoin", { children: [_jsx("para", { children: bufferChars.map((v) => v.map((v_) => v_.getChars().length <= 1 && v_.getChars().charCodeAt(0) < 128
                     ? v_.getChars() || '\x09'
                     : '\x7f').join('')).join('\n') }), _jsx("xjoin", { fillChar: '\x09', pad: [cursorPosition[0], 0, 0, cursorPosition[1]], children: _jsx("input", { width: 1, autofocus: true, visible: false }) })] }));
 }
